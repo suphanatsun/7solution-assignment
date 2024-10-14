@@ -1,0 +1,53 @@
+image:
+  repo: gcr.io/demo-myapp/myapp
+  username: _json_key
+  password: $GCR_JSON_KEY # include in repository variable with secure
+  tag: 1.0.0
+
+definitions:
+  caches:
+    gopkg: /go
+    gocache: ~/.cache/go-build
+
+  services:
+    myapp:
+      images: golang:1.21.4-alpine
+
+  steps:
+    - step: &buid-push
+        name: Tag version & Build and Push image to GCR repository
+        services:
+          - docker
+        caches:
+          - docker
+        script:
+          - echo $GCR_JSON_KEY | docker login -u _json_key --password-stdin  https://gcr.io
+          - docker build -t $image.name:$BITBUCKET_BUILD_NUMBER .
+          - docker push $image.name:$BITBUCKET_BUILD_NUMBER
+
+    - step: &deploy-staging
+        name: Deploy image to GKE cluster's staging
+        services:
+          - docker
+        caches:
+          - docker
+        script:
+          - "sed -i 's/newTag: [0-9.]*/newTag: $IMAGE_TAG/' ./overlay/staging/kustomization.yaml"
+
+    - step: &deploy-production
+        name: Deploy image to GKE cluster's production
+        services:
+          - docker
+        caches:
+          - docker
+        script:
+          - "sed -i 's/newTag: [0-9.]*/newTag: $IMAGE_TAG/' ./overlay/production/kustomization.yaml"
+
+pipelines:
+  branches:
+    main:
+      - step: *buid-push
+    staging:
+      - step: *deploy-staging
+    production:
+      - step: *deploy-production

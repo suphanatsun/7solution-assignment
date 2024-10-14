@@ -1,0 +1,10 @@
+region                                 = "asia-southeast1"
+gcp_project_id                         = "demo-myapp"
+gcr_name                               = "myapp"
+subnet_ip_cidr_range                   = "10.0.0.0/18"
+pods_cidr_block                        = "10.1.0.0/16"
+services_cidr_block                    = "10.2.0.0/18"
+master_authorized_networks_cidr_blocks = ["123.123.123.123/32"]
+master_cidr_block                      = "172.16.0.0/28"
+gke_version_prefix                     = "1.27."
+maintenance_window_start_time          = "12:00" # UTC+7
